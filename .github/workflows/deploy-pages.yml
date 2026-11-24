@@ -1,0 +1,44 @@
+name: Deploy a Cloudflare Pages
+
+# Deploy directo con Wrangler: NO consume los 500 builds/mes de Pages.
+# Requiere secrets del repo: CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # false mientras no se cargue el secret -> el paso de deploy se salta solo
+      CF_TOKEN_SET: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Instalar dependencias
+        run: bun install
+
+      - name: Build (export estatico)
+        run: bun run build
+
+      - name: Deploy a Cloudflare Pages (upload directo)
+        if: env.CF_TOKEN_SET == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          PROJECT="vortex-qr"
+          echo "Proyecto Pages: $PROJECT"
+          npx --yes wrangler@4 pages project create "$PROJECT" --production-branch=main 2>/dev/null || echo "El proyecto ya existe (o no se pudo crear), sigo con el deploy"
+          npx --yes wrangler@4 pages deploy out --project-name="$PROJECT" --branch=main --commit-dirty=true
