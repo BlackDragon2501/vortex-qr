@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // Vercel mantiene standalone; cualquier otro hosting (Pages, Workers, etc) exporta estatico.
   output: process.env.VERCEL ? "standalone" : "export",
   // GitHub Pages: https://blackdragon2501.github.io/vortex-qr/ (activo solo en el build de Actions con GITHUB_PAGES=1)
-  basePath: process.env.GITHUB_PAGES ? "vortex-qr" : undefined,
+  basePath: process.env.GITHUB_PAGES ? "/vortex-qr" : undefined,
   /* config options here */
   turbopack: {
     root: process.cwd(),
